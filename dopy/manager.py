@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding: utf-8
+# -*- coding: utf-8 -*-
 """
 This module simply sends request to the Digital Ocean API,
 and returns their response as a dict.
@@ -10,6 +10,7 @@ import json as json_module
 from six import wraps
 
 API_ENDPOINT = 'https://api.digitalocean.com'
+
 
 class DoError(RuntimeError):
     pass
@@ -108,7 +109,7 @@ class DoManager(object):
                 'backups_enabled': str(backups_enabled).lower(),
             }
             if ssh_key_ids:
-                # Need to be a comma separated string 
+                # Need to be a comma separated string
                 if type(ssh_key_ids) == list:
                     ssh_key_ids = ','.join(ssh_key_ids)
                 params['ssh_key_ids'] = ssh_key_ids
@@ -126,7 +127,8 @@ class DoManager(object):
         if params is None:
             params = {}
         params['type'] = droplet_type
-        json = self.request('/droplets/%s/actions' % droplet_id, params=params, method='POST')
+        json = self.request('/droplets/%s/actions' % droplet_id,
+                            params=params, method='POST')
         return json
 
     def reboot_droplet(self, droplet_id):
@@ -259,12 +261,12 @@ class DoManager(object):
             if network['type'] == 'private':
                 droplet[u'private_ip_address'] = network['ip_address']
 
-#regions==========================================
+    # Regions ==========================================
     def all_regions(self):
         json = self.request('/regions/')
         return json['regions']
 
-#images==========================================
+    # Images ==========================================
     def all_images(self, filter='global'):
         params = {'filter': filter}
         json = self.request('/images/', params)
@@ -274,7 +276,7 @@ class DoManager(object):
         if self.api_version == 2:
             json = self.request('/images?private=true')
             return json['images']
-        else: 
+        else:
             params = {'filter': 'my_images'}
             json = self.request('/images/', params)
             return json['images']
@@ -283,11 +285,11 @@ class DoManager(object):
         if params is None:
             params = {}
         params['type'] = image_type
-        json = self.request('/images/%s/actions' % image_id, params=params, method='POST')
+        json = self.request('/images/%s/actions' % image_id,
+                            params=params, method='POST')
         return json
 
     def show_image(self, image_id):
-        params = {'image_id': image_id}
         json = self.request('/images/%s' % image_id)
         return json['image']
 
@@ -308,7 +310,7 @@ class DoManager(object):
         json.pop('status', None)
         return json
 
-#ssh_keys=========================================
+    # SSH keys =========================================
     def all_ssh_keys(self):
         if self.api_version == 2:
             json = self.request('/account/keys')
@@ -348,12 +350,12 @@ class DoManager(object):
             self.request('/ssh_keys/%s/destroy/' % key_id)
         return True
 
-#sizes============================================
+    # Sizes ============================================
     def sizes(self):
         json = self.request('/sizes/')
         return json['sizes']
 
-#domains==========================================
+    # Domains ==========================================
     def all_domains(self):
         json = self.request('/domains/')
         return json['domains']
@@ -386,7 +388,8 @@ class DoManager(object):
             return json['domain_records']
         return json['records']
 
-    def new_domain_record(self, domain_id, record_type, data, name=None, priority=None, port=None, weight=None):
+    def new_domain_record(self, domain_id, record_type, data,
+                          name=None, priority=None, port=None, weight=None):
         params = {'data': data}
 
         if self.api_version == 2:
@@ -394,13 +397,18 @@ class DoManager(object):
         else:
             params['record_type'] = record_type
 
-        if name: params['name'] = name
-        if priority: params['priority'] = priority
-        if port: params['port'] = port
-        if weight: params['weight'] = weight
+        if name:
+            params['name'] = name
+        if priority:
+            params['priority'] = priority
+        if port:
+            params['port'] = port
+        if weight:
+            params['weight'] = weight
 
         if self.api_version == 2:
-            json = self.request('/domains/%s/records/' % domain_id, params, method='POST')
+            json = self.request('/domains/%s/records/' % domain_id, params,
+                                method='POST')
             return json['domain_record']
         else:
             json = self.request('/domains/%s/records/new/' % domain_id, params)
@@ -412,10 +420,12 @@ class DoManager(object):
             return json['domain_record']
         return json['record']
 
-    def edit_domain_record(self, domain_id, record_id, record_type, data, name=None, priority=None, port=None, weight=None):
+    def edit_domain_record(self, domain_id, record_id, record_type, data,
+                           name=None, priority=None, port=None, weight=None):
         if self.api_version == 2:
             params = {'name': name} # API v.2 allows only record name change
-            json = self.request('/domains/%s/records/%s' % (domain_id, record_id), params, method='PUT')
+            json = self.request('/domains/%s/records/%s' % (domain_id, record_id),
+                                params, method='PUT')
             return json['domain_record']
 
         params = {
@@ -423,26 +433,32 @@ class DoManager(object):
             'data': data,
         }
 
-        if name: params['name'] = name
-        if priority: params['priority'] = priority
-        if port: params['port'] = port
-        if weight: params['weight'] = weight
-        json = self.request('/domains/%s/records/%s/edit/' % (domain_id, record_id), params)
+        if name:
+            params['name'] = name
+        if priority:
+            params['priority'] = priority
+        if port:
+            params['port'] = port
+        if weight:
+            params['weight'] = weight
+        json = self.request('/domains/%s/records/%s/edit/' % (domain_id, record_id),
+                            params)
         return json['record']
 
     def destroy_domain_record(self, domain_id, record_id):
         if self.api_version == 2:
-            self.request('/domains/%s/records/%s' % (domain_id, record_id), method='DELETE')
+            self.request('/domains/%s/records/%s' % (domain_id, record_id),
+                         method='DELETE')
         else:
             self.request('/domains/%s/records/%s/destroy/' % (domain_id, record_id))
         return True
 
-#events(actions in v2 API)========================
+    # Events (actions in v2 API) ========================
     def show_all_actions(self):
         if self.api_version == 2:
             json = self.request('/actions')
             return json['actions']
-        return False # API v.1 haven't this functionality
+        return False  # API v.1 haven't this functionality
 
     def show_action(self, action_id):
         if self.api_version == 2:
@@ -456,8 +472,8 @@ class DoManager(object):
         json = self.request('/events/%s' % event_id)
         return json['event']
 
-#floating_ips=====================================
-    v2_api_required_str = ('This feature requires the V2 API. ' \
+    # Floating_ips =====================================
+    v2_api_required_str = ('This feature requires the V2 API. '
         'In order to continue, update DO_API_VERSION to 2.')
 
     def all_floating_ips(self):
@@ -468,22 +484,25 @@ class DoManager(object):
             json = self.request('/floating_ips')
             return json['floating_ips']
         else:
-            raise DoError(v2_api_required_str)
+            raise DoError(self.v2_api_required_str)
 
     def new_floating_ip(self, **kwargs):
         """
-        Creates a Floating IP and assigns it to a Droplet or reserves it to a region.
+        Creates a Floating IP and assigns it to a Droplet
+        or reserves it to a region.
         """
         droplet_id = kwargs.get('droplet_id')
         region = kwargs.get('region')
 
         if self.api_version == 2:
             if droplet_id is not None and region is not None:
-                raise DoError('Only one of droplet_id and region is required to create a Floating IP. ' \
-                    'Set one of the variables and try again.')
+                raise DoError('Only one of droplet_id and region is required '
+                              'to create a Floating IP. Set one of the variables'
+                              'and try again.')
             elif droplet_id is None and region is None:
-                raise DoError('droplet_id or region is required to create a Floating IP. ' \
-                    'Set one of the variables and try again.')
+                raise DoError('droplet_id or region is required to create '
+                              'a Floating IP. Set one of the variables '
+                              'and try again.')
             else:
                 if droplet_id is not None:
                     params = {'droplet_id': droplet_id}
@@ -509,9 +528,9 @@ class DoManager(object):
         Assigns a Floating IP to a Droplet.
         """
         if self.api_version == 2:
-            params = {'type': 'assign','droplet_id': droplet_id}
-
-            json = self.request('/floating_ips/' + ip_addr + '/actions', params=params, method='POST')
+            params = {'type': 'assign', 'droplet_id': droplet_id}
+            json = self.request('/floating_ips/%s/actions' % ip_addr,
+                                params=params, method='POST')
             return json['action']
         else:
             raise DoError(self.v2_api_required_str)
@@ -519,12 +538,13 @@ class DoManager(object):
     def unassign_floating_ip(self, ip_addr):
         """
         Unassign a Floating IP from a Droplet.
-        The Floating IP will be reserved in the region but not assigned to a Droplet.
+        The Floating IP will be reserved in the region but not assigned
+        to a Droplet.
         """
         if self.api_version == 2:
             params = {'type': 'unassign'}
-
-            json = self.request('/floating_ips/' + ip_addr + '/actions', params=params, method='POST')
+            json = self.request('/floating_ips/%s/actions' % ip_addr,
+                                params=params, method='POST')
             return json['action']
         else:
             raise DoError(self.v2_api_required_str)
@@ -544,20 +564,22 @@ class DoManager(object):
         Retrieve the status of a Floating IP action.
         """
         if self.api_version == 2:
-            json = self.request('/floating_ips/' + ip_addr + '/actions/' + action_id)
+            json = self.request(
+                    '/floating_ips/%s/actions/%s' % (ip_addr, action_id))
             return json['action']
         else:
             raise DoError(self.v2_api_required_str)
 
-#low_level========================================
+    # Low level ========================================
     def request(self, path, params={}, method='GET'):
         if not path.startswith('/'):
-            path = '/'+path
-        url = self.api_endpoint+path
+            path = '/' + path
+        url = self.api_endpoint + path
 
         if self.api_version == 2:
             headers = {'Authorization': "Bearer %s" % self.api_key}
-            resp = self.request_v2(url, params=params, headers=headers, method=method)
+            resp = self.request_v2(url, params=params, headers=headers,
+                                   method=method)
         else:
             params['client_id'] = self.client_id
             params['api_key'] = self.api_key
@@ -599,16 +621,19 @@ class DoManager(object):
 
         try:
             if method == 'POST':
-                resp = requests.post(url, data=json_module.dumps(params), headers=headers, timeout=60)
+                resp = requests.post(url, data=json_module.dumps(params),
+                                     headers=headers, timeout=60)
                 json = resp.json()
             elif method == 'DELETE':
                 resp = requests.delete(url, headers=headers, timeout=60)
                 json = {'status': resp.status_code}
             elif method == 'PUT':
-                resp = requests.put(url, headers=headers, params=params, timeout=60)
+                resp = requests.put(url, headers=headers, params=params,
+                                    timeout=60)
                 json = resp.json()
             elif method == 'GET':
-                resp = requests.get(url, headers=headers, params=params, timeout=60)
+                resp = requests.get(url, headers=headers, params=params,
+                                    timeout=60)
                 json = resp.json()
             else:
                 raise DoError('Unsupported method %s' % method)
